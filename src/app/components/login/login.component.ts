@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 
 import ValidateForm from 'src/app/helpers/ValidateForm';
 import { AuthService } from 'src/app/services/auth.service';
+import { UserStoreService } from 'src/app/services/user-store.service';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,8 @@ export class LoginComponent implements OnInit {
 
   constructor(private fb: FormBuilder, 
     private auth: AuthService,
-    private router:Router
+    private router:Router,
+    private userStore:UserStoreService
   ) { }
 
   ngOnInit(): void {
@@ -37,12 +39,21 @@ export class LoginComponent implements OnInit {
   onSubmit() {
 
     if (this.loginForm.valid) {
-      console.log("form is valid");
-      console.log(this.loginForm.value);
+      
 
       this.auth.signIn(this.loginForm.value).subscribe({
         next: (res) => {
-          console.log(res);
+          
+          this.loginForm.reset();
+
+          //for storing the token
+          this.auth.storeToken(res.accessToken);
+          const tokenPayload = this.auth.decodedToken();
+          
+       //we can do this way also
+          //this.userStore.fullname.next(tokenPayload.unique_name);
+          this.userStore.setFullNameForStore(tokenPayload.unique_name);
+          this.userStore.setRoleForStore(tokenPayload.role);
          
           this.router.navigate(['dashboard']);
           
